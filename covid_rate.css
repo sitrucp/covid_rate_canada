@@ -1,0 +1,39 @@
+body {
+    width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 14px;
+  }
+
+.navbar {
+    margin-bottom: 20px;
+}
+
+.label {
+    display:inline-block;
+}
+
+.label_color {
+    background-color: #AAAAAA;
+    border-width: 1px;
+    border-color: #000;
+    margin-right: 10px;
+    width: 20px;
+    height: 20px;
+    float: left;
+}
+
+.label_text {
+    float: left;
+}
+
+.button {
+    background-color: #FFF;
+    color: #333;
+    border-color: #3f75a2;
+    border-width: 1px;
+    padding: 10px;
+    width: 200px;
+    font-size: 14px;
+}
