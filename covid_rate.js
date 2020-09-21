@@ -75,7 +75,7 @@ Promise.all([
     document.getElementById("max_date").innerHTML += maxDate;
 
     // group filteredData by location and mean values
-    var data = d3.nest()
+    var dataHR = d3.nest()
     .key(function(d) { return d.province + "|" + d.statscan_arcgis_health_region; })
     .rollup(function(v) { 
         return {
@@ -89,6 +89,27 @@ Promise.all([
             avg_new_cases: group.value.avg_new_cases
         }
     });
+
+    // group filteredData by date and mean values
+    var dataByDate = d3.nest()
+    .key(function(d) { return d.date; })
+    .rollup(function(v) { 
+        return {
+            avg_new_cases: d3.sum(v, function(d) { return d.cases; })
+        };
+    })
+    .entries(filteredData)
+    .map(function(group) {
+        return {
+            location: group.key,
+            avg_new_cases: group.value.avg_new_cases
+        }
+    });
+
+    // get total for canada and append to Hr array
+    canadaTotal = d3.mean(dataByDate, function(d){return d.avg_new_cases;});
+    var dataCanada = [{"location":"Canada", "avg_new_cases": canadaTotal}]; 
+    data = dataHR.concat(dataCanada);
 
     getData();
 
