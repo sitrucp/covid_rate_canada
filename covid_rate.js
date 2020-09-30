@@ -152,12 +152,12 @@ Promise.all([
     var dataCanadaCurr = [{"location":"Canada", "avg_new_cases": canadaTotalCurr}]; 
     var dataCanadaPast = [{"location":"Canada", "avg_new_cases_past": canadaTotalPast}]; 
 
-    dataPast.concat(dataCanadaCurr);
-    dataPast.concat(dataCanadaPast);
+    dataCurrCan = dataCurr.concat(dataCanadaCurr);
+    dataPastCan = dataPast.concat(dataCanadaPast);
 
     // left join lookup data & dataPast on date
     const data = equijoinWithDefault(
-        dataCurr, dataPast, 
+        dataCurrCan, dataPastCan, 
         "location", "location", 
         ({location, avg_new_cases}, {avg_new_cases_past}, ) => 
         ({location, avg_new_cases, avg_new_cases_past}), 
