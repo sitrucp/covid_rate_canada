@@ -15,7 +15,7 @@ Promise.all([
     var regionLookup = rawData[1];
 
     cases.forEach(function(d) {
-        d.location = d.province + '|' + d.health_region
+        d.location = d.province + ' | ' + d.health_region
         d.date = reformatDate(d.date_report)
     });
 
