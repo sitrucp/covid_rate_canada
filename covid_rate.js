@@ -9,10 +9,10 @@ var file_hr_lookup = "https://raw.githubusercontent.com/sitrucp/canada_covid_hea
 Promise.all([
     d3.csv(file_cases),
     d3.csv(file_hr_lookup)
-]).then(function(data) {
+]).then(function(rawData) {
 
-    var cases = data[0];
-    var regionLookup = data[1];
+    var cases = rawData[0];
+    var regionLookup = rawData[1];
 
     cases.forEach(function(d) {
         d.location = d.province + '|' + d.health_region
@@ -36,15 +36,15 @@ Promise.all([
     const caseWithStatscan = equijoinWithDefault(
         cases, regionLookup, 
         "location", "province_health_region", 
-        ({date, cases}, {province, statscan_arcgis_health_region}, ) => 
-        ({date, province, statscan_arcgis_health_region, cases}), 
+        ({date, location, cases}, {province, statscan_arcgis_health_region}, ) => 
+        ({date, location, province, statscan_arcgis_health_region, cases}), 
         {province_health_region:null});
 
     $("#btn_sort").click(function () {
         d3.selectAll('svg').remove();
         var x = document.getElementById("btn_sort");
         if (x.value === "case") {
-            x.innerHTML = "Sort by health region";
+            x.innerHTML = "Sort by region";
             x.value = "country";
             data.sort(function(a, b){return b.avg_new_cases - a.avg_new_cases});
         } else {
@@ -59,30 +59,37 @@ Promise.all([
         getData();
     });
 
-    // filter caseWithStatscan
-    var cutoffDate = new Date();
-    contFilter = '';
-    cutoffDate.setDate(cutoffDate.getDate() - 8);
+    // filter caseWithStatscan past 7 days
+    var maxAvailDate = d3.max(caseWithStatscan.map(d=>d.date));
+    var cutOffDate = new Date();
+    var maxAvailDate = new Date(maxAvailDate);
+    cutOffDate.setDate(maxAvailDate.getDate() - 7);
+    filteredDataCurr = caseWithStatscan.filter(function(d) {
+        return parseTime(d.date) > cutOffDate;
+    })
 
-    filteredData = caseWithStatscan.filter(function(d) {
-        return parseTime(d.date) > cutoffDate;
+    // filter caseWithStatscan past 14 to 7 days (from maxAvailDate - 14 to maxAvailDate - 7)
+    var cutOffDate14days = new Date();
+    cutOffDate14days.setDate(maxAvailDate.getDate() - 14);
+    filteredDataPast = caseWithStatscan.filter(function(d) {
+        return parseTime(d.date) > cutOffDate14days &&  parseTime(d.date) < cutOffDate;
     })
 
     // get min and max date to write to index
-    minDate = d3.min(filteredData.map(d=>d.date));
-    maxDate = d3.max(filteredData.map(d=>d.date));
+    minDate = d3.min(filteredDataCurr.map(d=>d.date));
+    maxDate = d3.max(filteredDataCurr.map(d=>d.date));
     document.getElementById("min_date").innerHTML += minDate;
     document.getElementById("max_date").innerHTML += maxDate;
 
-    // group filteredData by location and mean values
-    var dataHR = d3.nest()
+    // group filteredDataCurr by location and mean values
+    var dataCurr = d3.nest()
     .key(function(d) { return d.province + "|" + d.statscan_arcgis_health_region; })
     .rollup(function(v) { 
         return {
             avg_new_cases: d3.mean(v, function(d) { return d.cases; })
         };
     })
-    .entries(filteredData)
+    .entries(filteredDataCurr)
     .map(function(group) {
         return {
             location: group.key,
@@ -90,15 +97,31 @@ Promise.all([
         }
     });
 
-    // group filteredData by date and mean values
-    var dataByDate = d3.nest()
+    // group filteredDataPast by date and mean values
+    var dataPast = d3.nest()
+    .key(function(d) { return d.province + "|" + d.statscan_arcgis_health_region; })
+    .rollup(function(v) { 
+        return {
+            avg_new_cases_past: d3.mean(v, function(d) { return d.cases; })
+        };
+    })
+    .entries(filteredDataPast)
+    .map(function(group) {
+        return {
+            location: group.key,
+            avg_new_cases_past: group.value.avg_new_cases_past
+        }
+    });
+
+    // group by date to get canada total curr
+    var dataByDateCurr = d3.nest()
     .key(function(d) { return d.date; })
     .rollup(function(v) { 
         return {
             avg_new_cases: d3.sum(v, function(d) { return d.cases; })
         };
     })
-    .entries(filteredData)
+    .entries(filteredDataCurr)
     .map(function(group) {
         return {
             location: group.key,
@@ -106,19 +129,55 @@ Promise.all([
         }
     });
 
+    // group by date to get canada total past
+    var dataByDatePast = d3.nest()
+    .key(function(d) { return d.date; })
+    .rollup(function(v) { 
+        return {
+            avg_new_cases_past: d3.sum(v, function(d) { return d.cases; })
+        };
+    })
+    .entries(filteredDataPast)
+    .map(function(group) {
+        return {
+            location: group.key,
+            avg_new_cases_past: group.value.avg_new_cases_past
+        }
+    });
+
     // get total for canada and append to Hr array
-    canadaTotal = d3.mean(dataByDate, function(d){return d.avg_new_cases;});
-    var dataCanada = [{"location":"Canada", "avg_new_cases": canadaTotal}]; 
-    data = dataHR.concat(dataCanada);
+    canadaTotalCurr = d3.mean(dataByDateCurr, function(d){return d.avg_new_cases;});
+    canadaTotalPast = d3.mean(dataByDatePast, function(d){return d.avg_new_cases_past;});
+
+    var dataCanadaCurr = [{"location":"Canada", "avg_new_cases": canadaTotalCurr}]; 
+    var dataCanadaPast = [{"location":"Canada", "avg_new_cases_past": canadaTotalPast}]; 
+
+    dataPast.concat(dataCanadaCurr);
+    dataPast.concat(dataCanadaPast);
+
+    // left join lookup data & dataPast on date
+    const data = equijoinWithDefault(
+        dataCurr, dataPast, 
+        "location", "location", 
+        ({location, avg_new_cases}, {avg_new_cases_past}, ) => 
+        ({location, avg_new_cases, avg_new_cases_past}), 
+        {avg_new_cases_past:0});
 
     getData();
 
     function getData() {
         for(var i = 0; i < data.length; i++) {
-            var metric = parseInt(data[i].avg_new_cases).toLocaleString("en");
-            var cycleDuration = cycleCalc(data[i].avg_new_cases);
+            if(selMetric == 'actual') {
+                var metric = parseInt(data[i].avg_new_cases).toLocaleString("en");
+                var metricPast = parseInt(data[i].avg_new_cases_past).toLocaleString("en");
+                var cycleDuration = cycleCalc(data[i].avg_new_cases);
+            } else {
+                var metric = parseInt(data[i].avg_new_cases_per_mil).toLocaleString("en");
+                var metricPast = parseInt(data[i].avg_new_cases_per_mil_past).toLocaleString("en");
+                var cycleDuration = cycleCalc(data[i].avg_new_cases_per_mil);
+            }
             var location = data[i].location;
-            addChart(location, metric, cycleDuration);
+            addChart(location, metric, metricPast, cycleDuration);
         }
     }
 
@@ -134,7 +193,7 @@ Promise.all([
         return cycleDuration
     }
 
-    function addChart(location, metric, cycleDuration) {
+    function addChart(location, metric, metricPast, cycleDuration) {
         var width = 700;
         var height = 20;
         var yText = height / 1.3;
@@ -169,7 +228,17 @@ Promise.all([
 
         // create svg shape
         var svgShape = svgContainer.append("circle")
-        .style("fill", "#FFF")
+        .style("stroke", "FFF")
+       	.style("stroke-width", 2)
+        .style("fill", function(d) { 
+            if(metric < metricPast) {
+                return "#6FC628";
+            } else if (metric > metricPast) {
+                return "#C62858";
+            } else {
+                return "#FFF";
+            }
+        })
         .attr("cy", yShape)
         .attr("r", 5);
 

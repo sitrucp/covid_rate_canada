@@ -14,17 +14,38 @@ body {
     display:inline-block;
 }
 
-.label_color {
+.legend_svg_background {
     background-color: #AAAAAA;
     border-width: 1px;
     border-color: #000;
-    margin-right: 10px;
-    width: 20px;
-    height: 20px;
+    margin-right: 5px;
+    width: 15px;
+    height: 15px;
     float: left;
 }
 
 .label_text {
+    float: left;
+    height: 15px;
+}
+
+.legend_rate_decrease {
+    border-radius: 50%;
+    background-color: #6FC628;
+    border: 2px solid #FFF;
+    margin-right: 5px;
+    width: 15px;
+    height: 15px;
+    float: left;
+}
+
+.legend_rate_increase {
+    border-radius: 50%;
+    background-color: #C62858;
+    border: 2px solid #FFF;
+    margin-right: 5px;
+    width: 15px;
+    height: 15px;
     float: left;
 }
 
@@ -34,6 +55,6 @@ body {
     border-color: #3f75a2;
     border-width: 1px;
     padding: 10px;
-    width: 200px;
+    width: 150px;
     font-size: 14px;
 }

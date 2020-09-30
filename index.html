@@ -44,13 +44,21 @@
 
                 <p>Chart visualizes rate of new COVID-19 cases per day based on past 7 days' average (<span id="min_date"></span> to <span id="max_date"></span>).</p>
             
-                <p>Data from <a href="https://github.com/ishaberry/Covid19Canada" target="_blank">COVID-19 Canada Open Data Working Group "cases.csv"</a></p>
+                <p>Data from <a href="https://github.com/ishaberry/Covid19Canada" target="_blank">COVID-19 Canada Open Data Working Group</a></p>
 
                 <p><button id="btn_sort" class="button" value="case">Sort by cases</button>
             
                 <div class="label">
-                    <div class="label_color"></div>
+                    <div class="legend_svg_background"></div>
                     <div class="label_text">No cases reported in past 7 days</div>
+                </div>
+                <div class="label">
+                    <div class="legend_rate_decrease"></div>
+                    <div class="label_text">Decrease from prev 7 day period</div>
+                </div>
+                <div class="label">
+                    <div class="legend_rate_increase"></div>
+                    <div class="label_text">Increase from prev 7 day period</div>
                 </div>
             
                 <p id="svg_container"></p>
