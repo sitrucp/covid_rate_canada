@@ -61,16 +61,15 @@ Promise.all([
 
     // filter caseWithStatscan past 7 days
     var maxAvailDate = d3.max(caseWithStatscan.map(d=>d.date));
-    var cutOffDate = new Date();
-    var maxAvailDate = new Date(maxAvailDate);
-    cutOffDate.setDate(maxAvailDate.getDate() - 7);
+    var cutOffDate = new Date(maxAvailDate);
+    cutOffDate.setDate(cutOffDate.getDate() - 7);
     filteredDataCurr = caseWithStatscan.filter(function(d) {
         return parseTime(d.date) > cutOffDate;
     })
 
     // filter caseWithStatscan past 14 to 7 days (from maxAvailDate - 14 to maxAvailDate - 7)
-    var cutOffDate14days = new Date();
-    cutOffDate14days.setDate(maxAvailDate.getDate() - 14);
+    var cutOffDate14days = new Date(maxAvailDate);
+    cutOffDate14days.setDate(cutOffDate14days.getDate() - 14);
     filteredDataPast = caseWithStatscan.filter(function(d) {
         return parseTime(d.date) > cutOffDate14days &&  parseTime(d.date) < cutOffDate;
     })
