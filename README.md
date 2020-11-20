@@ -1,4 +1,4 @@
-**7 day average new COVID-19 cases by Canadian health region - rate visualization**
+# 7 day average new COVID-19 cases by Canadian health region - rate visualization
 
 This is a visualization that shows relative rate of increase in new COVID-19 cases by Canadian Health Region over the past 7 days.
 

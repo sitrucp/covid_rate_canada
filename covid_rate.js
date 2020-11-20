@@ -227,7 +227,7 @@ Promise.all([
 
         // create svg shape
         var svgShape = svgContainer.append("circle")
-        .style("stroke", "FFF")
+        .style("stroke", "#FFF")
        	.style("stroke-width", 2)
         .style("fill", function(d) { 
             if(metric < metricPast) {
